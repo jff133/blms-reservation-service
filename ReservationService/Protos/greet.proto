@@ -1,21 +1,58 @@
 syntax = "proto3";
 
-option csharp_namespace = "ReservationService";
+import "google/type/money.proto";
+import "google/protobuf/empty.proto";
 
-package greet;
+option csharp_namespace = "Blms.ReservationService.Grpc";
 
-// The greeting service definition.
-service Greeter {
-  // Sends a greeting
-  rpc SayHello (HelloRequest) returns (HelloReply);
+package reservationService;
+
+enum ResourceStatus {
+  FREE = 0;               
+  OCCUPIED = 1;           
+  REQUIRES_CLEANING = 2;  
 }
 
-// The request message containing the user's name.
-message HelloRequest {
-  string name = 1;
+service ReservationApi {
+  rpc CreateReservation (ReservationRequest) returns (ReservationResponse);
+  rpc CompleteSession (CompleteRequest) returns (CompleteResponse); //я же правильно понимаю, что мы закрываем бронь либо автоматически по истечении времени, либо ручками, если кто то ушел раньше, но это все происходит через orderService 
+  rpc GetResources (GetResourcesRequest) returns (GetResourcesResponse);
 }
 
-// The response message containing the greetings.
-message HelloReply {
-  string message = 1;
+message ReservationRequest {
+  string resource_id = 1; 
+  string user_id = 2;     
+  string order_id = 3;   
+  string start_time = 4;  
+  string end_time = 5;    
+}
+
+message ReservationResponse {
+  bool success = 1;
+  string reservation_id = 2;
+  string error_message = 3;
+}
+
+message CompleteRequest {
+  string resource_id = 1;
+  string order_id = 2;
+}
+
+message CompleteResponse {
+  bool success = 1;
+  ResourceStatus new_status = 2;
+}
+
+message GetResourcesRequest {}
+
+message GetResourcesResponse {
+  repeated ResourceInfo resources = 1;
+}
+
+message ResourceInfo {
+  string id = 1;
+  string name = 2;       
+  string type = 3;         
+  ResourceStatus status = 4;
+  google.type.Money price_per_hour = 5; 
 }
